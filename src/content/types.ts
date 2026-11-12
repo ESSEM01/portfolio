@@ -12,6 +12,12 @@ export interface CaseStudy {
   result: string
 }
 
+/** A project read as a short proof: what had to hold, and what followed. */
+export interface Argument {
+  premises: string[]
+  conclusion: string
+}
+
 export interface Project {
   slug: string
   title: string
@@ -20,6 +26,7 @@ export interface Project {
   featured: boolean
   stack: string[]
   links: ProjectLink[]
+  argument: Argument
   /** Only flagship projects get a /work/:slug page. */
   caseStudy?: CaseStudy
 }

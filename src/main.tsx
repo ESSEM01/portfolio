@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
+import '@fontsource-variable/literata'
+import '@fontsource-variable/instrument-sans'
 import './index.css'
 import { App } from './App.tsx'
 

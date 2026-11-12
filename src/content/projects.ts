@@ -11,9 +11,17 @@ export const projects: Project[] = [
     featured: true,
     stack: ['TypeScript', 'React', 'Vite', 'Tailwind CSS', 'AdonisJS', 'libSQL', 'Anthropic API', 'Vitest', 'Docker', 'Render'],
     links: [
-      { label: 'Code', href: 'https://github.com/ESSEM01/organizzatore-spesa' },
+      { label: 'Code on GitHub', href: 'https://github.com/ESSEM01/organizzatore-spesa' },
       // TODO: add the live Render URL once confirmed.
     ],
+    argument: {
+      premises: [
+        'The weekly grocery budget is fixed.',
+        'LLM calls cost money, so they need a hard cap.',
+        'Business rules must be testable without the UI.',
+      ],
+      conclusion: 'A full-stack monorepo with a framework-free domain package and about 40 automated tests.',
+    },
     caseStudy: {
       problem: 'Planning a weekly grocery list that respects a budget while using what is on offer nearby.',
       constraints: ['Free-tier hosting', 'LLM costs must stay capped', 'Single developer'],
@@ -31,7 +39,15 @@ export const projects: Project[] = [
     kind: 'client',
     featured: true,
     stack: ['Astro', 'Sanity', 'Cloudflare Workers', 'Umami', 'Vitest'],
-    links: [{ label: 'Live site', href: 'https://marcomusacchio.com' }],
+    links: [{ label: 'Visit the live site', href: 'https://marcomusacchio.com' }],
+    argument: {
+      premises: [
+        'The site has to work in two languages.',
+        'The owner is not a developer and must publish on his own.',
+        'Visitor statistics without tracking cookies.',
+      ],
+      conclusion: 'Static Astro pages fed by Sanity, served from Cloudflare, with Umami analytics. Live in production.',
+    },
     caseStudy: {
       problem: 'An academic needed a fast bilingual site he could update himself.',
       constraints: ['Two languages', 'Non-technical editor', 'Privacy-friendly analytics'],
@@ -44,9 +60,16 @@ export const projects: Project[] = [
     title: 'Dolce Vita Photo',
     summary: 'Wedding photographer website with an online booking flow connected to Google Calendar.',
     kind: 'client',
-    featured: false,
+    featured: true,
     stack: ['Astro SSR', 'Google Calendar API', 'Nodemailer', 'Netlify'],
     links: [],
+    argument: {
+      premises: [
+        'Couples should see which dates are actually free.',
+        'A public booking form attracts spam.',
+      ],
+      conclusion: 'Server-side availability from Google Calendar, protected by rate limiting, a honeypot and a strict CSP.',
+    },
     caseStudy: {
       problem: 'A photographer wanted clients to request available dates without back-and-forth emails.',
       constraints: ['Public booking form exposed to spam', 'Real calendar availability'],
@@ -61,7 +84,11 @@ export const projects: Project[] = [
     kind: 'personal',
     featured: false,
     stack: ['React 19', 'TypeScript', 'React Router', 'AdonisJS 6', 'MariaDB'],
-    links: [{ label: 'Code', href: 'https://github.com/ESSEM01/movie-list' }],
+    links: [{ label: 'Code on GitHub', href: 'https://github.com/ESSEM01/movie-list' }],
+    argument: {
+      premises: ['A typed React client.', 'A REST API with a relational database.'],
+      conclusion: 'React 19 and TypeScript on AdonisJS 6 and MariaDB.',
+    },
   },
   {
     slug: 'aura-studio',
@@ -70,10 +97,19 @@ export const projects: Project[] = [
     kind: 'personal',
     featured: false,
     stack: ['React', 'Vite', 'CSS'],
-    links: [{ label: 'Code', href: 'https://github.com/ESSEM01/aura-studio' }],
+    links: [{ label: 'Code on GitHub', href: 'https://github.com/ESSEM01/aura-studio' }],
+    argument: {
+      premises: ['A visual design to follow closely.'],
+      conclusion: 'A one-page React site matching the design.',
+    },
   },
 ]
 
 export function findProject(slug: string): Project | undefined {
   return projects.find((p) => p.slug === slug && p.caseStudy)
+}
+
+/** Display name for a project slug, used by skills evidence. */
+export function projectTitle(slug: string): string | undefined {
+  return projects.find((p) => p.slug === slug)?.title
 }

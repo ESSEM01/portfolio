@@ -1,24 +1,214 @@
 @import "tailwindcss";
 
-/* Placeholder tokens: the real palette and type scale come in the design phase. */
+/*
+  Design idea: the site is an album sleeve.
+  The hero is the cover (the one bold element), projects are the tracklist,
+  case studies are the liner notes, skills are the credits, jobs the discography.
+  Inside each track, the project is set as an argument: P1, P2… then ∴.
+*/
 @theme {
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --color-surface: oklch(0.99 0 0);
-  --color-ink: oklch(0.2 0 0);
-  --color-muted: oklch(0.5 0 0);
-  --color-accent: oklch(0.5 0.15 250);
+  --font-serif: "Literata Variable", Georgia, serif;
+  --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
+
+  --color-paper: #ffffff;
+  --color-ink: #1a1c20;
+  --color-muted: #5a616b;
+  --color-rule: #e2e4e8;
+  --color-accent: #8a2433;
+  --color-cover: #6e1f2b;
+  --color-cover-ink: #fbf7f7;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface: oklch(0.18 0 0);
-    --color-ink: oklch(0.95 0 0);
-    --color-muted: oklch(0.72 0 0);
-    --color-accent: oklch(0.78 0.12 250);
+@layer base {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-paper: #15161a;
+      --color-ink: #e8e9ec;
+      --color-muted: #9da3ad;
+      --color-rule: #2c2f36;
+      --color-accent: #f0a8b2;
+      --color-cover: #7a2433;
+      --color-cover-ink: #fbf7f7;
+    }
+  }
+
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 1.5rem;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-sans);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+    text-underline-offset: 0.2em;
+    transition:
+      text-decoration-color 200ms ease,
+      text-underline-offset 200ms ease;
+  }
+
+  @media (hover: hover) {
+    a:hover {
+      text-decoration-color: currentColor;
+      text-underline-offset: 0.3em;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  }
+
+  /* Native disclosure: hide the default marker, the +/− sign replaces it. */
+  summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  summary::-webkit-details-marker {
+    display: none;
   }
 }
 
-body {
-  background: var(--color-surface);
-  color: var(--color-ink);
+/* Two-column row: a narrow hanging label (P1, ∴) and the text. */
+@utility hang {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+}
+
+@utility measure {
+  max-width: 68ch;
+}
+
+/* ---------------------------------------------------------------
+   Motion. Everything below runs only when the visitor hasn't asked
+   the OS for reduced motion.
+   --------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* The one load moment: the cover slides out of its sleeve, then the text follows. */
+  .cover-reveal {
+    animation: sleeve 900ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  .cover-reveal img {
+    animation: settle 1400ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  .hero-line {
+    animation: rise 700ms cubic-bezier(0.22, 0.8, 0.24, 1) 250ms both;
+  }
+  .hero-line-2 {
+    animation-delay: 380ms;
+  }
+  .hero-line-3 {
+    animation-delay: 500ms;
+  }
+
+  /* Track titles slide a touch toward the reader on hover. */
+  @media (hover: hover) {
+    .track-title {
+      display: inline-block;
+      transition: transform 250ms cubic-bezier(0.22, 0.8, 0.24, 1);
+    }
+    .track-summary:hover .track-title {
+      transform: translateX(0.25rem);
+    }
+  }
+
+  /* Side B photos ease in as they scroll into view, where the browser supports it. */
+  @supports (animation-timeline: view()) {
+    .photo-reveal {
+      animation: develop linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+
+  /* Page changes (Read the liner notes, Back to the tracklist) cross-fade and slide. */
+  ::view-transition-old(root) {
+    animation: 220ms cubic-bezier(0.4, 0, 1, 1) both page-out;
+  }
+  ::view-transition-new(root) {
+    animation: 420ms cubic-bezier(0.22, 0.8, 0.24, 1) 80ms both page-in;
+  }
+}
+
+@keyframes sleeve {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes develop {
+  from {
+    opacity: 0.35;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
 }
