@@ -26,8 +26,8 @@ export function CaseStudyPage() {
     <article className="pt-6">
       <title>{`${project.title}, liner notes by Stefano Moretti`}</title>
       <p className="font-sans text-sm">
-        <Link to="/#work" viewTransition>
-          Back to the tracklist
+        <Link to={`/#${project.slug}`} viewTransition>
+          Back to the crate
         </Link>
       </p>
       <p className="mt-10 font-sans text-(--color-muted)">

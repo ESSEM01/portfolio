@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { experience } from './experience'
 import { coverPhoto, sideBPhotos } from './photos'
 import { projects } from './projects'
+import { records, screenshotSlugs } from './records'
 import { skillGroups } from './skills'
 
 describe('photos', () => {
@@ -21,6 +22,18 @@ describe('photos', () => {
       expect(photo.alt.length, photo.name).toBeGreaterThan(20)
       expect(photo.credit.name, photo.name).toMatch(/@/)
       expect(photo.credit.href, photo.name).toMatch(/^https:\/\/www\.instagram\.com\//)
+    }
+  })
+})
+
+describe('record covers', () => {
+  it('has a file on disk for every screenshot, and only for real projects', () => {
+    for (const slug of screenshotSlugs) {
+      expect(projects.some((p) => p.slug === slug), slug).toBe(true)
+    }
+    for (const record of records) {
+      const shot = record.cover.screenshot
+      if (shot) expect(existsSync(`public${shot}`), shot).toBe(true)
     }
   })
 })

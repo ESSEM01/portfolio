@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { App } from './App'
 import { sideBPhotos } from './content/photos'
 import { projects } from './content/projects'
+import { records } from './content/records'
 
 function renderAt(path: string) {
   return render(
@@ -13,49 +14,57 @@ function renderAt(path: string) {
   )
 }
 
-function trackOf(title: string) {
-  return screen.getByRole('heading', { level: 3, name: title }).closest('details')!
+async function openRecord(title: string) {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: new RegExp(`: ${escape(title)}$`) }))
+  return screen.getByRole('dialog', { name: title })
 }
 
-describe('home page', () => {
-  it('lists every project in the tracklist', () => {
-    renderAt('/')
-    for (const project of projects) {
-      expect(screen.getByRole('heading', { level: 3, name: project.title })).toBeInTheDocument()
-    }
+function escape(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// jsdom has no WebGL, so these tests run against the grid of sleeves: the same records
+// and notes dialog the 3D crate uses. The 3D scene itself is checked in the browser.
+describe('crate', () => {
+  it('opens the record named in the URL hash', () => {
+    renderAt('/#contact')
+    expect(screen.getByRole('dialog', { name: 'Contact' })).toBeInTheDocument()
   })
 
-  it('opens the first track and keeps the others closed', () => {
-    renderAt('/')
-    const [first, ...rest] = projects
-    expect(trackOf(first.title)).toHaveAttribute('open')
-    for (const project of rest) {
-      expect(trackOf(project.title)).not.toHaveAttribute('open')
-    }
-  })
-
-  it('opens a track when its title is clicked', async () => {
+  it('closes an open record from its close button', async () => {
     const user = userEvent.setup()
     renderAt('/')
-    const second = projects[1]
-    await user.click(screen.getByRole('heading', { level: 3, name: second.title }))
-    expect(trackOf(second.title)).toHaveAttribute('open')
+    const dialog = await openRecord(records[0].title)
+    await user.click(within(dialog).getByRole('button', { name: 'Close record' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('opens every external link in a new tab with noopener', () => {
-    const { container } = renderAt('/')
-    const external = container.querySelectorAll('a[href^="http"]')
-    expect(external.length).toBeGreaterThan(0)
-    for (const link of external) {
-      expect(link).toHaveAttribute('target', '_blank')
-      expect(link.getAttribute('rel')).toContain('noopener')
+  it('shows every sleeve as a button', () => {
+    renderAt('/')
+    for (const [i, record] of records.entries()) {
+      expect(screen.getByRole('button', { name: `Open record ${i + 1}: ${record.title}` })).toBeInTheDocument()
     }
   })
 
-  it('shows the Side B freestyle section with a credit under every photo', () => {
+  it.each(projects.map((p) => [p.title, p]))('opens %s with its argument and links', async (title, project) => {
     renderAt('/')
-    const sideB = screen.getByRole('region', { name: 'Side B: freestyle' })
-    const figures = sideB.querySelectorAll('figure')
+    const dialog = await openRecord(title)
+    expect(within(dialog).getByText(project.argument.conclusion)).toBeInTheDocument()
+    for (const link of project.links) {
+      const a = within(dialog).getByRole('link', { name: link.label })
+      expect(a).toHaveAttribute('target', '_blank')
+      expect(a.getAttribute('rel')).toContain('noopener')
+    }
+    if (project.caseStudy) {
+      expect(within(dialog).getByRole('link', { name: 'Read the liner notes' })).toHaveAttribute('href', `/work/${project.slug}`)
+    }
+  })
+
+  it('opens Side B with a credit under every photo', async () => {
+    renderAt('/')
+    const dialog = await openRecord('Side B: freestyle')
+    const figures = dialog.querySelectorAll('figure')
     expect(figures.length).toBe(sideBPhotos.length)
     for (const figure of figures) {
       expect(figure.querySelector('img')?.getAttribute('alt')).toBeTruthy()
@@ -63,8 +72,13 @@ describe('home page', () => {
     }
   })
 
-  it('does not publish a phone number', () => {
+  it('never shows a phone number in any record', async () => {
     const { container } = renderAt('/')
+    for (const record of records) {
+      const dialog = await openRecord(record.title)
+      expect(dialog.textContent).not.toMatch(/\+?39\s?3\d{2}/)
+      await userEvent.setup().click(within(dialog).getByRole('button', { name: 'Close record' }))
+    }
     expect(container.textContent).not.toMatch(/\+?39\s?3\d{2}/)
   })
 })
@@ -76,6 +90,7 @@ describe('case study routes', () => {
     renderAt(`/work/${slug}`)
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Decisions' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to the crate' })).toHaveAttribute('href', `/#${slug}`)
   })
 
   it('shows the not-found page for an unknown slug', () => {
