@@ -1,8 +1,10 @@
 # Portfolio — Stefano Moretti
 
-Personal portfolio site: selected work, case studies, skills and experience.
+**Live:** https://portfolio-stefanomoretti.vercel.app
 
-**Stack:** React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · React Router · Vitest + Testing Library · Vercel
+Personal portfolio site, laid out as a 3D crate of records: flip through it, pull a record out and it opens like a book with that section's notes. Each record is a project, or a section such as skills, experience and contact.
+
+**Stack:** React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · three.js (react-three-fiber) · React Router · Vitest + Testing Library · Vercel
 
 ## Run
 
