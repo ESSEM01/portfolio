@@ -217,20 +217,28 @@ export function grooveTexture() {
   return toTexture(el)
 }
 
-const WOOD_TONES = ['#b9854f', '#a87644', '#c0905a', '#9d6c3e']
+/**
+ * Stain of the crate. A dark, low-saturation walnut sits with the site's ink, paper and
+ * burgundy; raw orange pine fought with them. The dark theme gets a lighter stain so the
+ * crate still reads against the near-black page.
+ */
+export const WOOD_STAINS = {
+  light: ['#4d3d33', '#44352c', '#57463b', '#3e3129'],
+  dark: ['#6f5f54', '#64554b', '#7a695d', '#5c4e45'],
+}
 
 /**
  * One wooden plank, drawn procedurally: long wavy grain, a knot or two, darker worn edges
  * and fine speckle. Returns the colour map and a matching bump map so light catches the
  * grain. Each `seed` gives a different plank, so the crate isn't made of identical boards.
  */
-export function plankTextures(seed: number) {
+export function plankTextures(seed: number, tones: string[]) {
   const [colorEl, c] = canvas(1024, 256)
   const [bumpEl, b] = canvas(1024, 256)
   let state = seed * 7919 + 13
   const rand = () => ((state = (state * 9301 + 49297) % 233280) / 233280)
 
-  c.fillStyle = WOOD_TONES[seed % WOOD_TONES.length]
+  c.fillStyle = tones[seed % tones.length]
   c.fillRect(0, 0, 1024, 256)
   b.fillStyle = '#8a8a8a'
   b.fillRect(0, 0, 1024, 256)
@@ -239,7 +247,7 @@ export function plankTextures(seed: number) {
   for (let i = 0; i < 9; i++) {
     const y = rand() * 256
     const h = 14 + rand() * 46
-    c.fillStyle = rand() > 0.5 ? `rgba(255, 226, 180, ${0.05 + rand() * 0.08})` : `rgba(70, 38, 14, ${0.05 + rand() * 0.1})`
+    c.fillStyle = rand() > 0.5 ? `rgba(235, 222, 208, ${0.04 + rand() * 0.06})` : `rgba(20, 14, 10, ${0.06 + rand() * 0.12})`
     c.fillRect(0, y, 1024, h)
   }
 
@@ -252,7 +260,7 @@ export function plankTextures(seed: number) {
     const dark = rand() > 0.25
     const alpha = 0.06 + rand() * 0.24
     const width = 0.5 + rand() * 1.6
-    c.strokeStyle = dark ? `rgba(66, 36, 14, ${alpha})` : `rgba(255, 232, 196, ${alpha * 0.6})`
+    c.strokeStyle = dark ? `rgba(20, 13, 9, ${alpha * 1.2})` : `rgba(232, 218, 202, ${alpha * 0.5})`
     b.strokeStyle = dark ? `rgba(40, 40, 40, ${alpha * 1.6})` : `rgba(210, 210, 210, ${alpha})`
     c.lineWidth = b.lineWidth = width
     c.beginPath()
@@ -273,7 +281,7 @@ export function plankTextures(seed: number) {
     const ky = 50 + rand() * 150
     const r = 8 + rand() * 12
     for (let ring = 5; ring >= 0; ring--) {
-      c.strokeStyle = `rgba(52, 26, 10, ${0.12 + (5 - ring) * 0.07})`
+      c.strokeStyle = `rgba(16, 10, 7, ${0.12 + (5 - ring) * 0.07})`
       b.strokeStyle = `rgba(30, 30, 30, ${0.1 + (5 - ring) * 0.08})`
       c.lineWidth = b.lineWidth = 1.5
       for (const ctx of [c, b]) {
@@ -282,7 +290,7 @@ export function plankTextures(seed: number) {
         ctx.stroke()
       }
     }
-    c.fillStyle = 'rgba(46, 22, 8, 0.75)'
+    c.fillStyle = 'rgba(14, 9, 6, 0.8)'
     c.beginPath()
     c.ellipse(kx, ky, r, r * 0.55, 0, 0, Math.PI * 2)
     c.fill()
@@ -290,24 +298,24 @@ export function plankTextures(seed: number) {
 
   // Speckle, like open pores.
   for (let i = 0; i < 1400; i++) {
-    c.fillStyle = `rgba(50, 26, 10, ${0.05 + rand() * 0.14})`
+    c.fillStyle = `rgba(14, 9, 6, ${0.06 + rand() * 0.16})`
     c.fillRect(rand() * 1024, rand() * 256, 1 + rand() * 3, 1)
   }
 
   // Worn, darker edges and ends, where a sawn plank picks up dirt.
   for (const ctx of [c, b]) {
     const edge = ctx.createLinearGradient(0, 0, 0, 256)
-    edge.addColorStop(0, 'rgba(30, 14, 4, 0.5)')
-    edge.addColorStop(0.07, 'rgba(30, 14, 4, 0)')
-    edge.addColorStop(0.93, 'rgba(30, 14, 4, 0)')
-    edge.addColorStop(1, 'rgba(30, 14, 4, 0.55)')
+    edge.addColorStop(0, 'rgba(10, 7, 5, 0.5)')
+    edge.addColorStop(0.07, 'rgba(10, 7, 5, 0)')
+    edge.addColorStop(0.93, 'rgba(10, 7, 5, 0)')
+    edge.addColorStop(1, 'rgba(10, 7, 5, 0.55)')
     ctx.fillStyle = edge
     ctx.fillRect(0, 0, 1024, 256)
     const ends = ctx.createLinearGradient(0, 0, 1024, 0)
-    ends.addColorStop(0, 'rgba(30, 14, 4, 0.4)')
-    ends.addColorStop(0.03, 'rgba(30, 14, 4, 0)')
-    ends.addColorStop(0.97, 'rgba(30, 14, 4, 0)')
-    ends.addColorStop(1, 'rgba(30, 14, 4, 0.4)')
+    ends.addColorStop(0, 'rgba(10, 7, 5, 0.4)')
+    ends.addColorStop(0.03, 'rgba(10, 7, 5, 0)')
+    ends.addColorStop(0.97, 'rgba(10, 7, 5, 0)')
+    ends.addColorStop(1, 'rgba(10, 7, 5, 0.4)')
     ctx.fillStyle = ends
     ctx.fillRect(0, 0, 1024, 256)
   }

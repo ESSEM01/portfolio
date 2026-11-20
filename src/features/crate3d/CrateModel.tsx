@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
 import { CRATE } from './layout'
-import { plankTextures } from './textures'
+import { WOOD_STAINS, plankTextures } from './textures'
 
 // Crate construction, in world units.
 const T = 0.07 // slat thickness
@@ -21,8 +21,19 @@ const VARIANTS = 5
 export function CrateModel({ x }: { x: number }) {
   const { innerWidth: w, innerDepth: d } = CRATE
 
+  // The stain follows the page theme.
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+  )
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => setTheme(query.matches ? 'dark' : 'light')
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+
   const { planks, posts, nail } = useMemo(() => {
-    const sets = Array.from({ length: VARIANTS }, (_, i) => plankTextures(i + 1))
+    const sets = Array.from({ length: VARIANTS }, (_, i) => plankTextures(i + 1, WOOD_STAINS[theme]))
     const planks = sets.map(
       ({ map, bump }) => new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: 1.6, roughness: 0.88 }),
     )
@@ -35,11 +46,11 @@ export function CrateModel({ x }: { x: number }) {
         c.needsUpdate = true
         return c
       }
-      return new THREE.MeshStandardMaterial({ map: turn(map), bumpMap: turn(bump), bumpScale: 1.6, roughness: 0.9, color: '#e9dccb' })
+      return new THREE.MeshStandardMaterial({ map: turn(map), bumpMap: turn(bump), bumpScale: 1.6, roughness: 0.9, color: '#d9d2cc' })
     })
-    const nail = new THREE.MeshStandardMaterial({ color: '#3a3836', roughness: 0.45, metalness: 0.8 })
-    return { planks, posts, nail, sets }
-  }, [])
+    const nail = new THREE.MeshStandardMaterial({ color: '#a8a39d', roughness: 0.5, metalness: 0.6 })
+    return { planks, posts, nail }
+  }, [theme])
 
   useEffect(
     () => () => {
