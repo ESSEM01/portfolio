@@ -28,3 +28,8 @@ dist-ssr
 
 # Raw photos: not for the public repo until chosen and cleared
 _inbox
+
+# Segreti
+.env
+.env.*
+!.env.example
