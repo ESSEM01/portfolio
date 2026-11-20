@@ -283,11 +283,16 @@ function Backdrop({ active, onClose }: { active: boolean; onClose: () => void })
   const { camera } = useThree()
   const mesh = useRef<THREE.Mesh>(null)
   const material = useRef<THREE.MeshBasicMaterial>(null)
-  // Match the page colour each time the veil comes up (light or dark theme).
+  // The veil takes the page colour: when it comes up, and whenever the theme changes.
   useEffect(() => {
-    if (!active) return
-    const paper = getComputedStyle(document.documentElement).getPropertyValue('--color-paper').trim()
-    if (paper) material.current?.color.set(paper)
+    const sync = () => {
+      const paper = getComputedStyle(document.documentElement).getPropertyValue('--color-paper').trim()
+      if (paper) material.current?.color.set(paper)
+    }
+    sync()
+    const query = window.matchMedia('(prefers-color-scheme: dark)')
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
   }, [active])
 
   useFrame((_, delta) => {

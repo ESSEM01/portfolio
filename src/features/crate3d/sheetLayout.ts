@@ -29,13 +29,17 @@ export function openLayout(width: number, height: number): OpenLayout {
   }
   const margin = 32
   const page = Math.min(height * 0.5, (width - margin * 2) * 0.3, 420)
-  const pageLeft = margin + page
   const pageTop = Math.max(page * 0.5 + 12, (height - page) / 2)
-  const left = pageLeft + page * 0.06
+  // The open cover (one page) and the notes sheet form one block, centred on the screen.
+  // The sheet starts just inside the right page, so it looks tucked into the sleeve.
+  const overlap = page * 0.06
+  const sheetWidth = Math.min(width - margin * 2 - page - overlap, 760)
+  const blockLeft = (width - (page + overlap + sheetWidth)) / 2
+  const pageLeft = blockLeft + page
   return {
     page,
     originX: pageLeft + page / 2,
     originY: pageTop + page,
-    sheet: { left, top: pageTop, width: Math.min(width - margin - left, 760), height: height - 16 - pageTop },
+    sheet: { left: pageLeft + overlap, top: pageTop, width: sheetWidth, height: height - 16 - pageTop },
   }
 }
