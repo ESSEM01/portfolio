@@ -82,6 +82,16 @@
     background: color-mix(in oklab, var(--color-accent) 22%, transparent);
   }
 
+  /* No visible scrollbars anywhere; wheel, touch and keyboard scrolling still work. */
+  html,
+  .record-dialog > div {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar,
+  .record-dialog > div::-webkit-scrollbar {
+    display: none;
+  }
+
   /* While a record is open, the crate behind it doesn't scroll. */
   html:has(dialog[open]) {
     overflow: hidden;
@@ -127,6 +137,10 @@
 .record-dialog[open] {
   display: block;
 }
+/* The sheet stays hidden while the 3D record comes forward and shows its cover. */
+.record-sheet:not(.is-ready) > div {
+  visibility: hidden;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   html {
@@ -149,12 +163,16 @@
   .record-dialog[open] .record-notes {
     animation: rise 600ms cubic-bezier(0.22, 0.8, 0.24, 1) 500ms both;
   }
-  /* 3D crate: the notes sheet slides out once the record has opened like a book. */
+  /* 3D crate: the notes sheet slides out when the scene says the record has opened. */
   .record-sheet[open] > div {
-    animation: sheet-out 650ms cubic-bezier(0.22, 0.8, 0.24, 1) 750ms both;
+    animation: none;
   }
+  .record-sheet.is-ready[open] > div {
+    animation: sheet-out 450ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  /* The notes arrive with the sheet, not after it: the whole opening stays within a second. */
   .record-sheet[open] .record-notes {
-    animation-delay: 1000ms;
+    animation: none;
   }
 
   /* Page changes (Read the liner notes, Back to the crate) cross-fade and slide. */

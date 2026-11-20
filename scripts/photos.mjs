@@ -47,3 +47,21 @@ for (const slug of screens) {
     .toFile(`${SCREENS_OUT}/${slug}.webp`)
   console.log(`screens/${slug}.webp ${info.width}x${info.height} ${(info.size / 1024).toFixed(0)} KB`)
 }
+
+// Freely licensed photos from Wikimedia Commons for the records that have no photo of
+// their own. Cropped to the same 1024x774 area as the screenshots. Credits: records.ts.
+const WEB_SRC = '_inbox/web'
+const web = {
+  turntable: { left: 0, top: 0, width: 1905, height: 1440 },
+  microphone: { left: 0, top: 0, width: 1693, height: 1280 },
+  boombox2: { left: 0, top: 1429, width: 1920, height: 1451, as: 'boombox' },
+}
+for (const [file, { as, ...box }] of Object.entries(web)) {
+  if (!existsSync(`${WEB_SRC}/${file}.jpg`)) continue
+  const info = await sharp(`${WEB_SRC}/${file}.jpg`)
+    .extract(box)
+    .resize({ width: 1024, height: 774 })
+    .webp({ quality: 76 })
+    .toFile(`${SCREENS_OUT}/${as ?? file}.webp`)
+  console.log(`screens/${as ?? file}.webp ${info.width}x${info.height} ${(info.size / 1024).toFixed(0)} KB`)
+}

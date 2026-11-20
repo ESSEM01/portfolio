@@ -8,6 +8,7 @@ export default function Crate3D(props: SceneProps) {
   return (
     <Canvas
       flat
+      shadows
       dpr={[1, 2]}
       camera={{ fov: FOV, near: 0.1, far: 60 }}
       gl={{ antialias: true, alpha: true }}

@@ -7,8 +7,8 @@ export const S = 2
 export const PANEL = 0.022
 /** Distance between records standing in the crate. */
 export const SPACING = 0.17
-/** How far a selected record rises out of the crate (enough to show its title band). */
-export const LIFT = 0.8
+/** Height of the arc a record follows when it goes over the others, front to back or back to front. */
+export const OVER_ARC = 2.0
 /** Records lean back slightly, like in a real bin. */
 export const LEAN = -0.11
 /** How far the front cover swings when the record opens like a book. */
@@ -27,10 +27,10 @@ export const CRATE = {
   wall: 0.09,
   backHeight: 1.25,
   frontHeight: 0.72,
-  floor: 0.06,
+  floor: 0.05,
 }
 
-/** z of record i standing in the crate (record 0 at the front). */
+/** z of slot i in the crate (slot 0 at the front; fractional while a record moves). */
 export function crateZ(i: number) {
   return CRATE.innerDepth / 2 - 0.24 - i * SPACING
 }
@@ -56,12 +56,10 @@ const forward = new THREE.Vector3()
 const right = new THREE.Vector3()
 const up = new THREE.Vector3()
 
-/** World pose that puts an opened record exactly where openLayout says, facing the camera. */
-export function openPlacement(camera: THREE.PerspectiveCamera, width: number, height: number) {
-  const layout = openLayout(width, height)
+/** World pose that shows a record facing the camera, `page` px wide, with its bottom centre at (originX, originY). */
+function poseAt(camera: THREE.PerspectiveCamera, width: number, height: number, page: number, originX: number, originY: number) {
   const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
   const pxPerUnit = height / (2 * tan * OPEN_DISTANCE)
-  const scale = layout.page / (S * pxPerUnit)
 
   camera.getWorldDirection(forward)
   right.setFromMatrixColumn(camera.matrixWorld, 0)
@@ -70,8 +68,22 @@ export function openPlacement(camera: THREE.PerspectiveCamera, width: number, he
   const position = camera.position
     .clone()
     .addScaledVector(forward, OPEN_DISTANCE)
-    .addScaledVector(right, (layout.originX - width / 2) / pxPerUnit)
-    .addScaledVector(up, (height / 2 - layout.originY) / pxPerUnit)
+    .addScaledVector(right, (originX - width / 2) / pxPerUnit)
+    .addScaledVector(up, (height / 2 - originY) / pxPerUnit)
 
-  return { position, quaternion: camera.quaternion.clone(), scale }
+  return { position, quaternion: camera.quaternion.clone(), scale: page / (S * pxPerUnit) }
+}
+
+/**
+ * The two poses of a record pulled out of the crate:
+ * - front: closed, large and centred in front of everything, so the cover can be seen;
+ * - open: where openLayout puts the book, next to the notes sheet.
+ */
+export function openPlacement(camera: THREE.PerspectiveCamera, width: number, height: number) {
+  const layout = openLayout(width, height)
+  const cover = Math.min(width * 0.78, height * 0.62, 520)
+  return {
+    front: poseAt(camera, width, height, cover, width / 2, height / 2 + cover / 2),
+    open: poseAt(camera, width, height, layout.page, layout.originX, layout.originY),
+  }
 }

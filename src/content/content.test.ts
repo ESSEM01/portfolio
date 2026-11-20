@@ -36,6 +36,19 @@ describe('record covers', () => {
       if (shot) expect(existsSync(`public${shot}`), shot).toBe(true)
     }
   })
+
+  it('gives every record a cover image, and credits every stock photo', () => {
+    for (const record of records) {
+      const { photo, screenshot, credit } = record.cover
+      expect(Boolean(photo || screenshot), record.id).toBe(true)
+      // Stock photos are the images on records that aren't projects.
+      if (screenshot && !record.project) {
+        expect(credit?.author, record.id).toBeTruthy()
+        expect(credit?.licence, record.id).toMatch(/^CC /)
+        expect(credit?.href, record.id).toMatch(/^https:\/\/commons\.wikimedia\.org\//)
+      }
+    }
+  })
 })
 
 describe('content integrity', () => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { ExternalLink } from '../../components/ExternalLink'
 import type { CrateRecord } from '../../content/records'
 import { RecordContent } from './RecordContent'
 import { Disc, Sleeve } from './Sleeve'
@@ -21,12 +22,15 @@ export function RecordDialog({
   number,
   total,
   sheet,
+  ready = true,
   onClose,
 }: {
   record: CrateRecord | null
   number: number
   total: number
   sheet?: SheetRect
+  /** Sheet only: false while the 3D record is still coming forward and opening. */
+  ready?: boolean
   onClose: () => void
 }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -50,7 +54,7 @@ export function RecordDialog({
       style={sheet ? { ...sheet, right: 'auto', bottom: 'auto' } : undefined}
       className={
         sheet
-          ? 'record-dialog record-sheet fixed m-0 max-h-none max-w-none bg-transparent p-0 text-(--color-ink) backdrop:bg-transparent'
+          ? `record-dialog record-sheet ${ready ? 'is-ready' : ''} fixed m-0 max-h-none max-w-none bg-transparent p-0 text-(--color-ink) backdrop:bg-transparent`
           : 'record-dialog m-auto h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-(--color-ink) backdrop:bg-black/60 sm:h-[min(92dvh,60rem)] sm:w-[min(94vw,62rem)]'
       }
     >
@@ -98,9 +102,29 @@ export function RecordDialog({
           </h2>
           <div className="record-notes mt-6">
             <RecordContent record={record} />
+            <CoverCredit record={record} />
           </div>
         </div>
       )}
     </dialog>
+  )
+}
+
+/** Who took the photo on this record's cover, when it isn't a screenshot. */
+function CoverCredit({ record }: { record: CrateRecord }) {
+  const { credit, photo } = record.cover
+  if (!credit && !photo) return null
+  return (
+    <p className="mt-10 font-sans text-xs text-(--color-muted)">
+      Cover photo by{' '}
+      {credit ? (
+        <>
+          <ExternalLink href={credit.href}>{credit.author}</ExternalLink>, {credit.licence}, via Wikimedia Commons
+        </>
+      ) : (
+        <ExternalLink href={photo!.credit.href}>{photo!.credit.name}</ExternalLink>
+      )}
+      .
+    </p>
   )
 }

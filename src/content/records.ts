@@ -16,8 +16,10 @@ export interface CrateRecord {
     color: string
     ink: string
     photo?: Photo
-    /** Path of a project screenshot (1024x774), shown under the title band. */
+    /** Path of a 1024x774 image shown under the title band: a project screenshot or a stock photo. */
     screenshot?: string
+    /** Attribution for a stock photo; its licence requires it to be shown. */
+    credit?: { author: string; licence: string; href: string }
   }
   project?: Project
 }
@@ -70,21 +72,48 @@ export const records: CrateRecord[] = [
     kind: 'skills',
     title: 'Credits',
     blurb: 'Each skill, and the work where you can see it.',
-    cover: { color: '#1f3a5f', ink: '#f1f4f9' },
+    cover: {
+      color: '#1f3a5f',
+      ink: '#f1f4f9',
+      screenshot: '/screens/turntable.webp',
+      credit: {
+        author: 'Adrian DuMay',
+        licence: 'CC BY 2.0',
+        href: 'https://commons.wikimedia.org/wiki/File:Technics_SL-1200MK2_turntable.jpg',
+      },
+    },
   },
   {
     id: 'experience',
     kind: 'experience',
     title: 'Discography',
     blurb: 'Where I have worked and studied.',
-    cover: { color: '#c9962e', ink: '#1a1c20' },
+    cover: {
+      color: '#c9962e',
+      ink: '#1a1c20',
+      screenshot: '/screens/boombox.webp',
+      credit: {
+        author: 'Rondo Estrello',
+        licence: 'CC BY-SA 2.0, cropped',
+        href: 'https://commons.wikimedia.org/wiki/File:Lasonic_i931_BOOMBOX!.jpg',
+      },
+    },
   },
   {
     id: 'contact',
     kind: 'contact',
     title: 'Contact',
     blurb: 'I am looking for a junior frontend or full-stack role.',
-    cover: { color: '#6e1f2b', ink: '#fbf7f7' },
+    cover: {
+      color: '#6e1f2b',
+      ink: '#fbf7f7',
+      screenshot: '/screens/microphone.webp',
+      credit: {
+        author: 'Marcel Grieder',
+        licence: 'CC BY 2.0',
+        href: 'https://commons.wikimedia.org/wiki/File:Microphone_(Shure_SM58)_(4900485245).jpg',
+      },
+    },
   },
 ]
 

@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { recordIndex, records } from '../../content/records'
@@ -31,6 +31,8 @@ export function CrateHome() {
   const [use3D, setUse3D] = useState(canUse3D)
   const [selected, setSelected] = useState(0)
   const [open, setOpen] = useState<number | null>(null)
+  // The record whose 3D cover has finished swinging open: its notes sheet may show.
+  const [bookOpen, setBookOpen] = useState<number | null>(null)
   const [sheet, setSheet] = useState<SheetRect | undefined>()
   const container = useRef<HTMLElement>(null)
   const { hash } = useLocation()
@@ -64,8 +66,46 @@ export function CrateHome() {
     return () => window.removeEventListener('resize', place)
   }, [use3D, open])
 
+  // The scene normally says when the record has opened. If its frames are held back (a
+  // background tab, a slow device), the notes still appear after a short wait.
+  useEffect(() => {
+    if (!use3D || open === null) return
+    const timer = window.setTimeout(() => setBookOpen(open), 2500)
+    return () => window.clearTimeout(timer)
+  }, [use3D, open])
+
+  // Next sends the front record to the back; previous brings the last one to the front.
+  const step = useCallback((by: number) => setSelected((i) => (i + by + total) % total), [total])
+
+  // Arrow keys and the mouse wheel flip through the crate while no record is open.
+  const lastWheel = useRef(0)
+  useEffect(() => {
+    if (!use3D || open !== null) return
+    const section = container.current
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
+      else return
+      e.preventDefault()
+    }
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      // One record per gesture, however fast the wheel or trackpad fires.
+      if (Math.abs(e.deltaY) < 8 || e.timeStamp - lastWheel.current < 320) return
+      lastWheel.current = e.timeStamp
+      step(e.deltaY > 0 ? 1 : -1)
+    }
+    window.addEventListener('keydown', onKey)
+    section?.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      section?.removeEventListener('wheel', onWheel)
+    }
+  }, [use3D, open, step])
+
   const close = () => {
     setOpen(null)
+    setBookOpen(null)
     if (hash) navigate('/', { replace: true })
   }
 
@@ -75,6 +115,7 @@ export function CrateHome() {
       number={(open ?? 0) + 1}
       total={total}
       sheet={use3D ? sheet : undefined}
+      ready={bookOpen === open}
       onClose={close}
     />
   )
@@ -89,13 +130,16 @@ export function CrateHome() {
   }
 
   const front = records[selected]
-  const step = (by: number) => setSelected((i) => (i + by + total) % total)
+  const openRecord = (i: number) => {
+    setSelected(i)
+    setOpen(i)
+  }
 
   return (
     <section ref={container} aria-labelledby="thesis" className="relative h-[max(34rem,calc(100dvh-5.5rem))] overflow-hidden">
       <SceneBoundary onError={() => setUse3D(false)}>
         <Suspense fallback={null}>
-          <Crate3D selected={selected} open={open} onSelect={setSelected} onOpen={setOpen} onClose={close} />
+          <Crate3D selected={selected} open={open} onSelect={setSelected} onOpen={openRecord} onBookOpen={setBookOpen} onClose={close} />
         </Suspense>
       </SceneBoundary>
 
@@ -134,7 +178,7 @@ export function CrateHome() {
             </button>
           </p>
           <p className="mt-2 hidden font-sans text-sm text-(--color-muted) md:block">
-            Hover a record to lift it, click to open it.
+            Use the arrows or scroll to flip through the crate. Click the front record to open it.
           </p>
 
           <nav aria-label="Records in the crate" className="pointer-events-auto mt-6 hidden md:block">
@@ -143,9 +187,7 @@ export function CrateHome() {
                 <li key={record.id}>
                   <button
                     type="button"
-                    onClick={() => setOpen(i)}
-                    onFocus={() => setSelected(i)}
-                    onPointerEnter={() => setSelected(i)}
+                    onClick={() => openRecord(i)}
                     aria-current={i === selected ? 'true' : undefined}
                     className={`text-left ${i === selected ? 'font-semibold text-(--color-ink)' : 'text-(--color-muted)'}`}
                   >
